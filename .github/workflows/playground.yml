@@ -28,17 +28,17 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 180
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-dotnet@v4
+      - uses: actions/setup-dotnet@v6
         with:
           dotnet-version: 10.0.x
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
 
-      - uses: mymindstorm/setup-emsdk@v14
+      - uses: mymindstorm/setup-emsdk@v16
         with:
           version: ${{ env.EMSDK_VERSION }}
           actions-cache-folder: emsdk-cache
@@ -53,7 +53,7 @@ jobs:
       # building libz3 with Emscripten takes most of the job; it only depends on the Z3
       # version and the build script
       - name: Cache Z3 (WebAssembly) build
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           # the library plus the generated headers the wrapper (port/wasm/vccz3.cpp) includes
           path: |
@@ -86,7 +86,7 @@ jobs:
           test "$rc" = 3
           grep -q "VC9501" /tmp/bad.out
 
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-pages-artifact@v5
         with:
           path: _site
 
@@ -102,4 +102,4 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
