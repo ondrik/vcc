@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <!-- Boogie looks for "z3.exe" next to its own binaries -->
+    <AssemblyName>z3.exe</AssemblyName>
+    <RootNamespace>Microsoft.Research.Vcc.Z3Shim</RootNamespace>
+    <RollForward>Major</RollForward>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="Z3Compat.cs" />
+    <Compile Include="Program.cs" />
+  </ItemGroup>
+</Project>

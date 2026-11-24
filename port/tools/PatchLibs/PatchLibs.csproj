@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <EnableDefaultCompileItems>true</EnableDefaultCompileItems>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Mono.Cecil" Version="0.11.6" />
+  </ItemGroup>
+  <!-- Produce patched copies of the prebuilt Boogie binaries in port/.libs/Boogie. -->
+  <Target Name="PatchBoogie" AfterTargets="Build" Inputs="$(Libs)Boogie/Core.dll;$(TargetPath)" Outputs="$(BoogieLibs)Core.dll">
+    <Exec Command="dotnet &quot;$(TargetPath)&quot; &quot;$(Libs)Boogie&quot; &quot;$(BoogieLibs)&quot;" />
+  </Target>
+</Project>

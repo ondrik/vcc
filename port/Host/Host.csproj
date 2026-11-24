@@ -1,0 +1,76 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AssemblyName>vcc</AssemblyName>
+    <OutputType>Exe</OutputType>
+    <RollForward>Major</RollForward>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../tools/PatchLibs/PatchLibs.csproj" ReferenceOutputAssembly="false" />
+    <ProjectReference Include="../Z3Shim/Z3Shim.csproj" ReferenceOutputAssembly="false" OutputItemType="Z3ShimOutput" />
+    <PackageReference Include="System.ComponentModel.Composition" Version="10.0.0" />
+    <Compile Include="$(Src)Common/Include/version.cs" />
+    <Compile Include="$(Src)Host/CCompilerHelper.cs" />
+    <Compile Include="$(Src)Host/ConsoleLogger.cs" />
+    <Compile Include="$(Src)Host/ErrorHandler.cs" />
+    <Compile Include="$(Src)Host/PathHelper.cs" />
+    <Compile Include="$(Src)Host/PluginManager.cs" />
+    <Compile Include="$(Src)Host/Host.cs" />
+    <Compile Include="$(Src)Host/TestRunner.cs" />
+    <Compile Include="$(Src)Host/TransEnv.cs" />
+    <Compile Include="$(Src)Host/VccOptionWrapper.cs" />
+    <Compile Include="$(Src)Host/VccPlugin.cs" />
+    <Compile Include="$(Src)Host/XmlLogger.cs" />
+    <Compile Include="$(Src)Host/Properties/AssemblyInfo.cs" />
+    <EmbeddedResource Include="$(Src)Boogie/UnivBackPred2.smt2" LogicalName="UnivBackPred2.smt2" />
+    <None Include="$(Src)Boogie/UnivBackPred2.smt2" CopyToOutputDirectory="PreserveNewest" Link="UnivBackPred2.smt2" />
+    <EmbeddedResource Include="$(Src)Host/ErrorMessages.resx" LogicalName="Microsoft.Research.Vcc.Host.ErrorMessages.resources" />
+    <ProjectReference Include="../Ast/Ast.fsproj" />
+    <ProjectReference Include="../Runtime/Runtime.csproj" SetTargetFramework="TargetFramework=net40" SkipGetTargetFrameworkProperties="true" />
+    <ProjectReference Include="../Core/Core.csproj" />
+    <ProjectReference Include="../CodeModel2VccHelper/CodeModel2VccHelper.csproj" />
+    <ProjectReference Include="../CodeModel2Vcc/CodeModel2Vcc.fsproj" />
+    <ProjectReference Include="../Transformers/Transformers.fsproj" />
+    <ProjectReference Include="../Translator/Translator.fsproj" />
+    <Reference Include="Microsoft.Cci.AstsProjectedAsCodeModel"><HintPath>$(Libs)CCI/Microsoft.Cci.AstsProjectedAsCodeModel.dll</HintPath></Reference>
+    <Reference Include="Microsoft.Cci.CodeModel"><HintPath>$(Libs)CCI/Microsoft.Cci.CodeModel.dll</HintPath></Reference>
+    <Reference Include="Microsoft.Cci.CodeModelToIL"><HintPath>$(Libs)CCI/Microsoft.Cci.CodeModelToIL.dll</HintPath></Reference>
+    <Reference Include="Microsoft.Cci.ILGenerator"><HintPath>$(Libs)CCI/Microsoft.Cci.ILGenerator.dll</HintPath></Reference>
+    <Reference Include="Microsoft.Cci.MetadataHelper"><HintPath>$(Libs)CCI/Microsoft.Cci.MetadataHelper.dll</HintPath></Reference>
+    <Reference Include="Microsoft.Cci.MetadataModel"><HintPath>$(Libs)CCI/Microsoft.Cci.MetadataModel.dll</HintPath></Reference>
+    <Reference Include="Microsoft.Cci.MutableCodeModel"><HintPath>$(Libs)CCI/Microsoft.Cci.MutableCodeModel.dll</HintPath></Reference>
+    <Reference Include="Microsoft.Cci.MutableMetadataModel"><HintPath>$(Libs)CCI/Microsoft.Cci.MutableMetadataModel.dll</HintPath></Reference>
+    <Reference Include="Microsoft.Cci.PeReader"><HintPath>$(Libs)CCI/Microsoft.Cci.PeReader.dll</HintPath></Reference>
+    <Reference Include="Microsoft.Cci.SourceModel"><HintPath>$(Libs)CCI/Microsoft.Cci.SourceModel.dll</HintPath></Reference>
+    <Reference Include="Microsoft.Contracts"><HintPath>$(Libs)CCI/Microsoft.Contracts.dll</HintPath></Reference>
+    <Reference Include="AbsInt"><HintPath>$(BoogieLibs)AbsInt.dll</HintPath></Reference>
+    <Reference Include="AIFramework"><HintPath>$(BoogieLibs)AIFramework.dll</HintPath></Reference>
+    <Reference Include="BaseTypes"><HintPath>$(BoogieLibs)BaseTypes.dll</HintPath></Reference>
+    <Reference Include="Core"><HintPath>$(BoogieLibs)Core.dll</HintPath></Reference>
+    <Reference Include="Graph"><HintPath>$(BoogieLibs)Graph.dll</HintPath></Reference>
+    <Reference Include="Model"><HintPath>$(BoogieLibs)Model.dll</HintPath></Reference>
+    <Reference Include="ParserHelper"><HintPath>$(BoogieLibs)ParserHelper.dll</HintPath></Reference>
+    <Reference Include="Provers.SMTLib"><HintPath>$(BoogieLibs)Provers.SMTLib.dll</HintPath></Reference>
+    <Reference Include="VCExpr"><HintPath>$(BoogieLibs)VCExpr.dll</HintPath></Reference>
+    <Reference Include="VCGeneration"><HintPath>$(BoogieLibs)VCGeneration.dll</HintPath></Reference>
+    <Reference Include="Houdini"><HintPath>$(BoogieLibs)Houdini.dll</HintPath></Reference>
+    <Reference Include="CodeContractsExtender"><HintPath>$(BoogieLibs)CodeContractsExtender.dll</HintPath></Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies.net40" Version="1.0.3" GeneratePathProperty="true" ExcludeAssets="all" />
+  </ItemGroup>
+  <!-- Reference mscorlib that CCI models the C type system on (see HostEnvironment). -->
+  <Target Name="CopyRefMscorlib" AfterTargets="Build">
+    <!-- the z3.exe shim (apphost + managed dll + runtimeconfig) next to the Boogie binaries -->
+    <ItemGroup>
+      <Z3ShimFiles Include="$(MSBuildThisFileDirectory)../Z3Shim/bin/$(Configuration)/z3.exe*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(Z3ShimFiles)" DestinationFolder="$(OutDir)" />
+    <Copy SourceFiles="$(PkgMicrosoft_NETFramework_ReferenceAssemblies_net40)/build/.NETFramework/v4.0/mscorlib.dll" DestinationFolder="$(OutDir)ref" />
+    <ItemGroup>
+      <VccHeaders Include="$(Src)Headers/**/*.h;$(Src)Headers/*.bpl" />
+    </ItemGroup>
+    <!-- PathHelper looks for a directory named "headers" (case-sensitive outside Windows) -->
+    <Copy SourceFiles="@(VccHeaders)" DestinationFiles="@(VccHeaders->'$(OutDir)headers/%(RecursiveDir)%(Filename)%(Extension)')" />
+  </Target>
+</Project>

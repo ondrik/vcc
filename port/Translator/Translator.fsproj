@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AssemblyName>Microsoft.Research.Vcc.Translator</AssemblyName>
+    <OutputType>Library</OutputType>
+
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../tools/PatchLibs/PatchLibs.csproj" ReferenceOutputAssembly="false" />
+    <Compile Include="$(Src)Translator/BoogieToken.fs" />
+    <Compile Include="$(Src)Translator/BoogieAST.fs" />
+    <Compile Include="$(Src)Translator/ToBoogieAST.fs" />
+    <Compile Include="$(Src)Translator/TranslatorUtils.fs" />
+    <Compile Include="$(Src)Translator/InformationFlow.fs" />
+    <Compile Include="$(Src)Translator/BvTranslator.fs" />
+    <Compile Include="$(Src)Translator/TriggerInference.fs" />
+    <Compile Include="$(Src)Translator/Translator.fs" />
+    <Compile Include="$(Src)Translator/VcOpt.fs" />
+    <Compile Include="$(Src)Common/Include/version.fs" />
+    <ProjectReference Include="../Ast/Ast.fsproj" />
+    <Reference Include="Graph"><HintPath>$(BoogieLibs)Graph.dll</HintPath></Reference>
+    <Reference Include="AIFramework"><HintPath>$(BoogieLibs)AIFramework.dll</HintPath></Reference>
+    <Reference Include="BaseTypes"><HintPath>$(BoogieLibs)BaseTypes.dll</HintPath></Reference>
+    <Reference Include="Core"><HintPath>$(BoogieLibs)Core.dll</HintPath></Reference>
+    <Reference Include="Model"><HintPath>$(BoogieLibs)Model.dll</HintPath></Reference>
+    <Reference Include="ParserHelper"><HintPath>$(BoogieLibs)ParserHelper.dll</HintPath></Reference>
+    <Reference Include="VCExpr"><HintPath>$(BoogieLibs)VCExpr.dll</HintPath></Reference>
+    <Reference Include="VCGeneration"><HintPath>$(BoogieLibs)VCGeneration.dll</HintPath></Reference>
+  </ItemGroup>
+</Project>

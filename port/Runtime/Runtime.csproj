@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AssemblyName>Microsoft.Research.Vcc.Runtime</AssemblyName>
+    <OutputType>Library</OutputType>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <!-- VCC reads this assembly's metadata with CCI and resolves it against the reference
+         mscorlib, so it must be built against .NET Framework, not System.Runtime. -->
+    <TargetFramework>net40</TargetFramework>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="$(Src)Common/Include/version.cs" />
+    <Compile Include="$(Src)Runtime/Stdarg.cs" />
+    <Compile Include="$(Src)Runtime/Contracts.cs" />
+    <Compile Include="$(Src)Runtime/MicrosoftIntrinsics.cs" />
+    <Compile Include="$(Src)Runtime/Stdio.cs" />
+    <Compile Include="$(Src)Runtime/Stdlib.cs" />
+    <Compile Include="$(Src)Runtime/String.cs" />
+    <Compile Include="$(Src)Runtime/Properties/AssemblyInfo.cs" />
+  </ItemGroup>
+</Project>

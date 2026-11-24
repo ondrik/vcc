@@ -1,7 +1,7 @@
 #pragma once
 
 #include <vcc.h>
-#include "spec.h"
+#include "Spec.h"
 
 #define BIT_SELECT(x, i) ((x) & (1 << (i)))
 

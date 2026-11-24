@@ -1,5 +1,5 @@
 #include <vcc.h>
-#include "Spinlock.h"
+#include "SpinLock.h"
 #include "BitMap.h"
 
 _claimable_ struct LockContainer {

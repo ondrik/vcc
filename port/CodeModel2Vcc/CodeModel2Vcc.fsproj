@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AssemblyName>Microsoft.Research.Vcc.CodeModel</AssemblyName>
+    <OutputType>Library</OutputType>
+
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="$(Src)CodeModel2Vcc/visitor.fs" />
+    <Compile Include="$(Src)Common/Include/version.fs" />
+    <ProjectReference Include="../Ast/Ast.fsproj" /><ProjectReference Include="../Core/Core.csproj" /><ProjectReference Include="../CodeModel2VccHelper/CodeModel2VccHelper.csproj" />
+    <Reference Include="Microsoft.Cci.AstsProjectedAsCodeModel"><HintPath>$(Libs)CCI/Microsoft.Cci.AstsProjectedAsCodeModel.dll</HintPath></Reference>
+    <Reference Include="Microsoft.Cci.CodeModel"><HintPath>$(Libs)CCI/Microsoft.Cci.CodeModel.dll</HintPath></Reference>
+    <Reference Include="Microsoft.Cci.CodeModelToIL"><HintPath>$(Libs)CCI/Microsoft.Cci.CodeModelToIL.dll</HintPath></Reference>
+    <Reference Include="Microsoft.Cci.ILGenerator"><HintPath>$(Libs)CCI/Microsoft.Cci.ILGenerator.dll</HintPath></Reference>
+    <Reference Include="Microsoft.Cci.MetadataHelper"><HintPath>$(Libs)CCI/Microsoft.Cci.MetadataHelper.dll</HintPath></Reference>
+    <Reference Include="Microsoft.Cci.MetadataModel"><HintPath>$(Libs)CCI/Microsoft.Cci.MetadataModel.dll</HintPath></Reference>
+    <Reference Include="Microsoft.Cci.MutableCodeModel"><HintPath>$(Libs)CCI/Microsoft.Cci.MutableCodeModel.dll</HintPath></Reference>
+    <Reference Include="Microsoft.Cci.MutableMetadataModel"><HintPath>$(Libs)CCI/Microsoft.Cci.MutableMetadataModel.dll</HintPath></Reference>
+    <Reference Include="Microsoft.Cci.PeReader"><HintPath>$(Libs)CCI/Microsoft.Cci.PeReader.dll</HintPath></Reference>
+    <Reference Include="Microsoft.Cci.SourceModel"><HintPath>$(Libs)CCI/Microsoft.Cci.SourceModel.dll</HintPath></Reference>
+    <Reference Include="Microsoft.Contracts"><HintPath>$(Libs)CCI/Microsoft.Contracts.dll</HintPath></Reference>
+  </ItemGroup>
+</Project>

@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AssemblyName>Microsoft.Research.Vcc.Transformers</AssemblyName>
+    <OutputType>Library</OutputType>
+
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="$(Src)Transformers/helper.fs" />
+    <Compile Include="$(Src)Transformers/transutil.fs" />
+    <Compile Include="$(Src)Transformers/DataTypes.fs" />
+    <Compile Include="$(Src)Transformers/ExtraWarnings.fs" />
+    <Compile Include="$(Src)Transformers/inference.fs" />
+    <Compile Include="$(Src)Transformers/Isabelle.fs" />
+    <Compile Include="$(Src)Transformers/NewSyntax.fs" />
+    <Compile Include="$(Src)Transformers/normalizer.fs" />
+    <Compile Include="$(Src)Transformers/simplifier.fs" />
+    <Compile Include="$(Src)Transformers/Termination.fs" />
+    <Compile Include="$(Src)Transformers/transtype.fs" />
+    <Compile Include="$(Src)Transformers/ToCoreC.fs" />
+    <Compile Include="$(Src)Transformers/AddChecks.fs" />
+    <Compile Include="$(Src)Transformers/TransFinalize.fs" />
+    <Compile Include="$(Src)Transformers/TransSideChecks.fs" />
+    <Compile Include="$(Src)Transformers/transformers.fs" />
+    <Compile Include="$(Src)Transformers/Plugin.fs" />
+    <Compile Include="$(Src)Common/Include/version.fs" />
+    <ProjectReference Include="../Ast/Ast.fsproj" />
+  </ItemGroup>
+</Project>
