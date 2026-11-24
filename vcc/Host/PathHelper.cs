@@ -43,9 +43,25 @@ namespace Microsoft.Research.Vcc
       return cachedVccHeaderDirectory.Value.FullName;
     }
 
+    /// <summary>
+    /// Directory holding VCC's binaries and support files (headers, reference mscorlib, ...).
+    /// Can be overridden with the VCC_HOME environment variable, which is needed where
+    /// assemblies have no file location (e.g., WebAssembly).
+    /// </summary>
+    public static string VccHome
+    {
+      get {
+        string home = Environment.GetEnvironmentVariable("VCC_HOME");
+        if (!String.IsNullOrEmpty(home)) return home;
+        string loc = typeof(PathHelper).Assembly.Location;
+        if (!String.IsNullOrEmpty(loc)) return Path.GetDirectoryName(loc);
+        return AppDomain.CurrentDomain.BaseDirectory;
+      }
+    }
+
     private static DirectoryInfo BinariesDirectory
     {
-      get { return new FileInfo(typeof(PathHelper).Assembly.Location).Directory; }
+      get { return new DirectoryInfo(VccHome); }
     }
 
     public static string InspectorOption

@@ -477,6 +477,7 @@ namespace Microsoft.Research.Vcc
       {
         Logger.Instance.NewLine();
         Logger.Instance.Error(e.Message);
+        if (Environment.GetEnvironmentVariable("VCC_DEBUG") != null) Logger.Instance.Error(e.ToString());
       }
 
       return -2;
@@ -678,7 +679,7 @@ namespace Microsoft.Research.Vcc
       // Prefer a fixed reference mscorlib (shipped next to vcc) over the running runtime's core
       // library: the C type system is modelled on the .NET Framework one, and on non-Windows
       // runtimes typeof(object) is System.Private.CoreLib.
-      string loc = Path.Combine(AppContext.BaseDirectory, "ref", "mscorlib.dll");
+      string loc = Path.Combine(PathHelper.VccHome, "ref", "mscorlib.dll");
       System.Reflection.AssemblyName mscorlibName;
       if (File.Exists(loc)) {
         mscorlibName = System.Reflection.AssemblyName.GetAssemblyName(loc);
@@ -689,6 +690,7 @@ namespace Microsoft.Research.Vcc
       var tempMscorlibIdentity = new AssemblyIdentity(this.NameTable.GetNameFor(mscorlibName.Name), "", mscorlibName.Version, mscorlibName.GetPublicKeyToken(), loc);
       this.RegisterAsLatest(this.peReader.OpenAssembly(BinaryDocument.GetBinaryDocumentForFile(tempMscorlibIdentity.Location, this), out this.mscorlibIdentity));
       loc = typeof(Microsoft.Research.Vcc.Runtime).Assembly.Location;
+      if (String.IsNullOrEmpty(loc)) loc = Path.Combine(PathHelper.VccHome, "Microsoft.Research.Vcc.Runtime.dll");
       System.Reflection.AssemblyName runtimeName = new System.Reflection.AssemblyName(typeof(Microsoft.Research.Vcc.Runtime).Assembly.FullName);
       var tempVccRuntimeAssemblyIdentity = new AssemblyIdentity(this.NameTable.GetNameFor(runtimeName.Name), "", runtimeName.Version, runtimeName.GetPublicKeyToken(), loc);
       this.RegisterAsLatest(this.peReader.OpenAssembly(BinaryDocument.GetBinaryDocumentForFile(tempVccRuntimeAssemblyIdentity.Location, this), out this.vccRuntimeAssemblyIdentity));

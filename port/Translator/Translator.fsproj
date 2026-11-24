@@ -19,7 +19,7 @@
     <ProjectReference Include="../Ast/Ast.fsproj" />
     <Reference Include="Graph"><HintPath>$(BoogieLibs)Graph.dll</HintPath></Reference>
     <Reference Include="AIFramework"><HintPath>$(BoogieLibs)AIFramework.dll</HintPath></Reference>
-    <Reference Include="BaseTypes"><HintPath>$(BoogieLibs)BaseTypes.dll</HintPath></Reference>
+    <Reference Include="Basetypes"><HintPath>$(BoogieLibs)Basetypes.dll</HintPath></Reference>
     <Reference Include="Core"><HintPath>$(BoogieLibs)Core.dll</HintPath></Reference>
     <Reference Include="Model"><HintPath>$(BoogieLibs)Model.dll</HintPath></Reference>
     <Reference Include="ParserHelper"><HintPath>$(BoogieLibs)ParserHelper.dll</HintPath></Reference>

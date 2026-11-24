@@ -147,7 +147,7 @@ namespace Microsoft.Research.Vcc
           } else {
             compilerParameters = new List<string>();
             source.Append(l);
-            source.Append("\r\n");
+            source.Append(Environment.NewLine);
           }
 
           while (!instream.EndOfStream) {
@@ -156,7 +156,7 @@ namespace Microsoft.Research.Vcc
             if (l == "`" || l == "/*`")
               break;
             source.Append(l);
-            source.Append("\r\n");
+            source.Append(Environment.NewLine);
           }
 
           if (instream.EndOfStream) {

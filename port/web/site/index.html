@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VCC Playground</title>
+<meta name="description" content="Verify annotated C programs with VCC directly in your browser.">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="top">
+  <div class="brand">
+    <h1>VCC Playground</h1>
+    <p>Verify annotated C in your browser. VCC, Boogie and Z3 run locally as WebAssembly; nothing you type leaves your machine.</p>
+  </div>
+  <nav>
+    <a href="https://github.com/ondrik/vcc">Source</a>
+    <a href="https://github.com/ondrik/vcc/blob/master/docs/vcc-tutorial-col1w.pdf">Tutorial</a>
+    <a href="https://github.com/ondrik/vcc/blob/master/docs/vcc-manual-col1w.pdf">Manual</a>
+  </nav>
+</header>
+
+<main>
+  <section class="panel input" aria-label="Input">
+    <div class="toolbar">
+      <select id="examples" aria-label="Load an example"><option value="">Load an example…</option></select>
+      <input id="filename" class="filename" value="input.c" aria-label="File name" spellcheck="false">
+      <span class="spacer"></span>
+      <button id="share" type="button">Share</button>
+      <button id="restore" type="button" hidden>Restore my text</button>
+    </div>
+    <div id="share-panel" class="share-panel" hidden>
+      <input id="share-link" readonly aria-label="Share link">
+      <span id="share-note"></span>
+    </div>
+    <div class="editor" id="editor">
+      <div class="gutter" id="gutter" aria-hidden="true"></div>
+      <div class="code">
+        <pre class="highlight" id="highlight" aria-hidden="true"></pre>
+        <textarea id="source" spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="C source"></textarea>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel run" aria-label="Verification">
+    <div class="options">
+      <label>Pointer size
+        <select id="ptrsize"><option value="64">64-bit</option><option value="32">32-bit</option></select>
+      </label>
+      <label>Functions <input id="functions" placeholder="all" spellcheck="false" title="Comma-separated functions to verify (/f:)"></label>
+      <label>Timeout (s) <input id="timeout" type="number" min="5" max="3600" value="120"></label>
+      <label class="wide">Extra options <input id="extra" placeholder="e.g. /smoke" spellcheck="false" title="Further VCC options, separated by spaces"></label>
+    </div>
+    <div class="actions">
+      <button id="run" class="primary" type="button">Verify <kbd>Ctrl ⏎</kbd></button>
+      <button id="stop" type="button" disabled>Stop</button>
+      <span id="status" class="status" role="status"></span>
+      <span id="verdict" class="verdict"></span>
+      <button id="clear" type="button">Clear output</button>
+    </div>
+    <pre id="output" class="output" aria-live="polite"></pre>
+    <p class="note">The first run downloads about 30&nbsp;MB (cached afterwards). VCC runs on an interpreted .NET runtime and Z3 single-threaded, so expect it to be a few times slower than native.
+      Based on the <a href="https://github.com/microsoft/vcc">VCC</a> verifier from Microsoft Research.</p>
+  </section>
+</main>
+
+<script src="examples.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

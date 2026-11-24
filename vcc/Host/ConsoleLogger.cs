@@ -27,6 +27,10 @@ namespace Microsoft.Research.Vcc
         atStartOfLine = true;
       }
       
+#if VCC_BROWSER
+      // no console colors in WebAssembly
+      Console.WriteLine(msg);
+#else
       var savedColor = Console.ForegroundColor;
 
       switch (kind) {
@@ -40,6 +44,7 @@ namespace Microsoft.Research.Vcc
 
       Console.WriteLine(msg);
       Console.ForegroundColor = savedColor;
+#endif
     }
 
     public void NewLine()

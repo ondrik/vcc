@@ -1,13 +1,15 @@
-# VCC on modern .NET (Linux)
+# VCC on modern .NET (Linux and the browser)
 
 SDK-style projects that build the sources in `../vcc` with .NET 10, so VCC runs on
-Linux (and, later, in the browser). The original VS2015 solution is unchanged.
+Linux and, compiled to WebAssembly, in the browser (the playground). The original
+VS2015 solution is unchanged.
 
 ## Build
 
     dotnet build port/VccPort.sln -c Release
 
-Requirements: .NET 10 SDK, `z3` (tested with 4.13.3) and `cpp` on `PATH`.
+Requirements: .NET 10 SDK, `z3` (tested with 4.13.3) and `cpp` on `PATH`. To preprocess
+with mcpp instead (as the playground does), point `VCC_CPP` to an mcpp binary.
 If .NET is installed outside the default location, set `DOTNET_ROOT`.
 
 ## Run
@@ -29,6 +31,45 @@ If .NET is installed outside the default location, set `DOTNET_ROOT`.
 - **Z3**: Boogie starts `z3.exe` next to its binaries. That is `Z3Shim`, which
   starts the real Z3 (`$VCC_Z3` or `z3`) and translates the pre-4.0 parameter
   names Boogie and VCC use (`CASE_SPLIT`, `SOFT_TIMEOUT`, ...) to current ones.
+
+## The playground (WebAssembly)
+
+Everything runs client-side in a Web Worker: the C source is preprocessed by
+[mcpp](https://github.com/zeroc-ice/mcpp), then VCC (`Browser/`, .NET `browser-wasm`)
+verifies it, with Boogie calling Z3 in-process. Z3 is built single-threaded with a polling
+timer, so the page needs no `SharedArrayBuffer` or cross-origin isolation and can be served
+from GitHub Pages. `.github/workflows/playground.yml` builds and deploys it.
+
+Pieces:
+
+- `wasm/build-z3.sh`, `wasm/vccz3.cpp`: Z3 with Emscripten. The wrapper sets up a
+  `cmd_context` like the z3 executable does; `Z3_eval_smtlib2_string` turned out to be
+  orders of magnitude slower on some of Boogie's queries.
+- `wasm/build-mcpp.sh`: the C preprocessor (also usable natively via `VCC_CPP`).
+- `ProverBridge/`: replaces the z3 process. `tools/PatchLibs --inproc` rewrites Boogie
+  (`.libs/Boogie-inproc`): `SMTLibProcess` talks to the bridge, `ProcessStartInfo` and
+  `Console.CancelKeyPress` (unavailable in the browser) are stubbed out,
+  `Checker.BeginCheck` runs synchronously (no threads), and `Assembly.Location` falls back
+  to `VCC_HOME`.
+- `web/vcc-engine.mjs`: runs one verification (mcpp, then VCC with Z3); used by the
+  page's worker and by `web/run-node.mjs` for testing under Node.
+- `web/site/`: the page. `web/assemble.sh` puts everything together.
+
+Build locally (needs emsdk 3.1.73 in `PATH`):
+
+    port/wasm/build-z3.sh <z3-4.15.4-source> build/z3-wasm build/wasm
+    port/wasm/build-mcpp.sh <mcpp-source> build/wasm
+    port/web/assemble.sh _site build/wasm build/wasm
+    node port/web/run-node.mjs _site vcc/Demo/Parity.c        # or serve _site over HTTP
+
+Notes:
+
+- Mono's interpreter optimizer crashes on some of this (2010-era) code, so the engine runs
+  with `MONO_INTERPRETER_OPTIONS=-all`.
+- In a worker, `dotnet.js` must be imported before `onmessage` is set (see `worker.js`).
+- A .NET runtime cannot be restarted, so every run uses a fresh worker.
+- `VCC_DEBUG=1` makes VCC print stack traces of internal errors; `VCC_SMT_TRACE=<file>` logs
+  the SMT-LIB traffic (shim and bridge).
 
 ## Status
 

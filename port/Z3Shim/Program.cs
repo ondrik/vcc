@@ -21,6 +21,9 @@ namespace Microsoft.Research.Vcc.Z3Shim
       if (args.Length == 1 && (args[0] == "/version" || args[0] == "-version")) args = new[] { "-version" };
       foreach (var a in Z3Compat.TranslateArguments(args)) psi.ArgumentList.Add(a);
 
+      var tracePath = Environment.GetEnvironmentVariable("VCC_SMT_TRACE");
+      var trace = string.IsNullOrEmpty(tracePath) ? null : new System.IO.StreamWriter(tracePath, false) { AutoFlush = true };
+      trace?.WriteLine("; args " + string.Join(" ", psi.ArgumentList));
       using var proc = Process.Start(psi);
       var stdin = Console.In;
       var pin = proc.StandardInput;
@@ -28,7 +31,11 @@ namespace Microsoft.Research.Vcc.Z3Shim
       var pump = new Thread(() => {
         try {
           string line;
-          while ((line = stdin.ReadLine()) != null) pin.WriteLine(Z3Compat.TranslateInput(line));
+          while ((line = stdin.ReadLine()) != null) {
+            var translated = Z3Compat.TranslateInput(line);
+            trace?.WriteLine(translated);
+            pin.WriteLine(translated);
+          }
           pin.Close();
         } catch (Exception) { /* Z3 exited */ }
       }) { IsBackground = true };

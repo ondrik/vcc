@@ -90,11 +90,17 @@ namespace Microsoft.Research.Vcc
     }
 
     /// <summary>
-    /// Arguments for a GNU-compatible preprocessor (cpp, gcc -E, clang -E). The MSVC CRT headers
+    /// Arguments for a GNU-compatible preprocessor (cpp, gcc -E, clang -E) or mcpp. The MSVC CRT headers
     /// are replaced by the minimal stand-ins in headers/portable.
     /// </summary>
-    private static List<string> GenerateCppArgs(string fileName, VccOptions commandLineOptions) {
-      var args = new List<string> { "-E", "-x", "c", "-undef", "-nostdinc", "-DVERIFY", "-D_WIN32", "-D_MSC_VER=1600" };
+    private static bool IsMcpp(string cpp) {
+      return Path.GetFileNameWithoutExtension(cpp).IndexOf("mcpp", StringComparison.OrdinalIgnoreCase) >= 0;
+    }
+
+    private static List<string> GenerateCppArgs(string fileName, VccOptions commandLineOptions, bool mcpp) {
+      var args = mcpp
+        ? new List<string> { "-I-", "-DVERIFY", "-D_WIN32", "-D_MSC_VER=1600", "-DVCC_PORTABLE_PP" }
+        : new List<string> { "-E", "-x", "c", "-undef", "-nostdinc", "-DVERIFY", "-D_WIN32", "-D_MSC_VER=1600", "-DVCC_PORTABLE_PP" };
       if (commandLineOptions.PointerSize == 64) args.Add("-D_WIN64");
       foreach (string ppOption in commandLineOptions.PreprocessorOptions) {
         // accept MSVC-style /D, /U and /I options
@@ -103,8 +109,8 @@ namespace Microsoft.Research.Vcc
       }
       string/*?*/ vccHeaders = PathHelper.GetVccHeaderDir(false);
       if (vccHeaders != null) {
-        args.Add("-I" + vccHeaders);
-        args.Add("-I" + Path.Combine(vccHeaders, "portable"));
+        args.Add("-I"); args.Add(vccHeaders);
+        args.Add("-I"); args.Add(Path.Combine(vccHeaders, "portable"));
       }
       args.Add(fileName);
       return args;
@@ -119,7 +125,7 @@ namespace Microsoft.Research.Vcc
         CreateNoWindow = true, RedirectStandardOutput = true, RedirectStandardError = true,
         UseShellExecute = false, StandardOutputEncoding = Encoding.UTF8
       };
-      info.Arguments = String.Join(" ", GenerateCppArgs(fileName, commandLineOptions).Select(a => "\"" + a.Replace("\\", "\\\\").Replace("\"", "\\\"") + "\"").ToArray());
+      info.Arguments = String.Join(" ", GenerateCppArgs(fileName, commandLineOptions, IsMcpp(cpp)).Select(a => "\"" + a.Replace("\\", "\\\\").Replace("\"", "\\\"") + "\"").ToArray());
 
       string stdout, stderr;
       int exitCode;

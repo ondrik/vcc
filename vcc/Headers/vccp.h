@@ -18,7 +18,13 @@
  *** Types
  ***/
 
+#ifdef VCC_PORTABLE_PP
+// mcpp (used outside Windows and in the browser) does not paste \ onto an identifier,
+// but emits \name without a space when written directly
+#define SPEC_TYPE(name) type \name
+#else
 #define SPEC_TYPE(name) type _concat_identifiers(\, name)
+#endif
 
 _(typedef void *\object)
 _(typedef __int64 \integer)

@@ -3,6 +3,9 @@
 #ifndef _VCC_PORTABLE_CRTDEFS_H
 #define _VCC_PORTABLE_CRTDEFS_H
 
+/* like the MSVC one, this makes the SAL annotations (__in, __inout, ...) available */
+#include <sal.h>
+
 #ifdef _WIN64
 typedef unsigned __int64 size_t;
 typedef __int64 ptrdiff_t;

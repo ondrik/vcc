@@ -11,6 +11,8 @@
     <Src>$(MSBuildThisFileDirectory)../vcc/</Src>
     <Libs>$(MSBuildThisFileDirectory)../vcc/</Libs>
     <BoogieLibs>$(MSBuildThisFileDirectory).libs/Boogie/</BoogieLibs>
+    <!-- Boogie patched to call its prover in-process (WebAssembly build) -->
+    <BoogieInprocLibs>$(MSBuildThisFileDirectory).libs/Boogie-inproc/</BoogieInprocLibs>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
   </PropertyGroup>
 </Project>

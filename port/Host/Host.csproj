@@ -45,7 +45,7 @@
     <Reference Include="Microsoft.Contracts"><HintPath>$(Libs)CCI/Microsoft.Contracts.dll</HintPath></Reference>
     <Reference Include="AbsInt"><HintPath>$(BoogieLibs)AbsInt.dll</HintPath></Reference>
     <Reference Include="AIFramework"><HintPath>$(BoogieLibs)AIFramework.dll</HintPath></Reference>
-    <Reference Include="BaseTypes"><HintPath>$(BoogieLibs)BaseTypes.dll</HintPath></Reference>
+    <Reference Include="Basetypes"><HintPath>$(BoogieLibs)Basetypes.dll</HintPath></Reference>
     <Reference Include="Core"><HintPath>$(BoogieLibs)Core.dll</HintPath></Reference>
     <Reference Include="Graph"><HintPath>$(BoogieLibs)Graph.dll</HintPath></Reference>
     <Reference Include="Model"><HintPath>$(BoogieLibs)Model.dll</HintPath></Reference>
