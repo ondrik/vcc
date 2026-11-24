@@ -73,8 +73,16 @@ Notes:
 
 ## Status
 
-On the regression suite (same set as `Test/testsuite/run-all.bat`, 1479 files),
-1393 pass as-is. Of the rest, 59 differ only in the order of output lines (.NET
-Core randomizes string hashing); most others are cosmetic (error columns) or
-preprocessor differences between gcc and MSVC. About 8 differ in prover behaviour
-with the modern Z3 (memory-outs, timeouts, `basics-40`).
+Regression suite (same set as `Test/testsuite/run-all.bat`, 1479 files), native, Z3 4.13.3:
+
+- with mcpp (`VCC_CPP`, the playground's preprocessor): 1426 pass, 50 fail, 3 time out;
+- with gcc's `cpp`: 1393 pass.
+
+Most remaining differences are cosmetic: output lines in a different order (.NET Core
+randomizes string hashing), error columns shifted by the preprocessor's spacing, and
+preprocessor warnings. A handful are prover differences with the modern Z3 (memory-outs,
+timeouts, `basics-40`). Known limitations:
+
+- mcpp does not support `__COUNTER__` (test `arrays-15`);
+- includes are case-sensitive outside Windows;
+- the playground verifies a single file (no local headers besides VCC's own).
