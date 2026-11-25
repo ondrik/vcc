@@ -123,7 +123,7 @@ namespace Microsoft.Research.Vcc
 
     static bool RunTestSuite(string directoryName, string suiteName, StreamReader instream, VccOptions commandLineOptions) {
       var startTime = DateTime.UtcNow;
-      System.Diagnostics.Debug.Listeners.Remove("Default");
+      System.Diagnostics.Trace.Listeners.Remove("Default");
       var errorHandler = new CciErrorHandler(commandLineOptions);
       StringBuilder source = null;
       StringBuilder expectedOutput = null;
@@ -147,7 +147,7 @@ namespace Microsoft.Research.Vcc
           } else {
             compilerParameters = new List<string>();
             source.Append(l);
-            source.Append("\r\n");
+            source.Append(Environment.NewLine);
           }
 
           while (!instream.EndOfStream) {
@@ -156,7 +156,7 @@ namespace Microsoft.Research.Vcc
             if (l == "`" || l == "/*`")
               break;
             source.Append(l);
-            source.Append("\r\n");
+            source.Append(Environment.NewLine);
           }
 
           if (instream.EndOfStream) {
@@ -186,7 +186,7 @@ namespace Microsoft.Research.Vcc
           TextWriter savedOut = Console.Out;
           Console.SetOut(new StringWriter(actualOutput));
           System.Diagnostics.TextWriterTraceListener myWriter = new System.Diagnostics.TextWriterTraceListener(System.Console.Out);
-          System.Diagnostics.Debug.Listeners.Add(myWriter);
+          System.Diagnostics.Trace.Listeners.Add(myWriter);
 
           ++testCaseCount;
           string suiteNameWithoutExt = Path.GetFileNameWithoutExtension(suiteName);
@@ -216,12 +216,12 @@ namespace Microsoft.Research.Vcc
 
           Logger.Instance.ResetReportedErrors();
           Console.SetOut(savedOut);
-          System.Diagnostics.Debug.Listeners.Remove(myWriter);
-          Regex rx = new Regex(@"[a-zA-Z]:\\.*?\\(.*)" + vccSplitSuffix + @"[0-9_]*.c\(");
+          System.Diagnostics.Trace.Listeners.Remove(myWriter);
+          Regex rx = new Regex(@"(?:[a-zA-Z]:\\.*?\\|/[^\r\n(]*?/)(.*)" + vccSplitSuffix + @"[0-9_]*.c\(");
           string actualOutputRepl = rx.Replace(actualOutput.ToString(), "testcase(");
-          actualOutputRepl = actualOutputRepl.Trim();
+          actualOutputRepl = actualOutputRepl.Replace("\r", "").Trim();
 
-          var expected = expectedOutput.ToString().Trim();
+          var expected = expectedOutput.ToString().Replace("\r", "").Trim();
           if (!expected.Equals(actualOutputRepl)) {
             ReportError(suiteName, source, expected, actualOutputRepl, errLine, errors++ == 0);
           }

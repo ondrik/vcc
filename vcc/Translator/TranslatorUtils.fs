@@ -150,7 +150,7 @@ namespace Microsoft.Research.Vcc
         let w =
           let rec aux = function
             | (pref, w) :: rest ->
-              if id.StartsWith pref then w
+              if id.StartsWith (pref : string) then w
               else aux rest
             | [] -> failwith "weight"
           aux weights

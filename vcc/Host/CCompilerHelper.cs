@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Linq;
 
 namespace Microsoft.Research.Vcc
@@ -80,7 +81,92 @@ namespace Microsoft.Research.Vcc
       return hasErrors;
     }
 
+    private static bool UseGnuPreprocessor {
+      get {
+        return Environment.OSVersion.Platform == PlatformID.Unix
+            || Environment.OSVersion.Platform == PlatformID.MacOSX
+            || Environment.GetEnvironmentVariable("VCC_CPP") != null;
+      }
+    }
+
+    /// <summary>
+    /// Arguments for a GNU-compatible preprocessor (cpp, gcc -E, clang -E) or mcpp. The MSVC CRT headers
+    /// are replaced by the minimal stand-ins in headers/portable.
+    /// </summary>
+    private static bool IsMcpp(string cpp) {
+      return Path.GetFileNameWithoutExtension(cpp).IndexOf("mcpp", StringComparison.OrdinalIgnoreCase) >= 0;
+    }
+
+    private static List<string> GenerateCppArgs(string fileName, VccOptions commandLineOptions, bool mcpp) {
+      var args = mcpp
+        ? new List<string> { "-I-", "-DVERIFY", "-D_WIN32", "-D_MSC_VER=1600", "-DVCC_PORTABLE_PP" }
+        : new List<string> { "-E", "-x", "c", "-undef", "-nostdinc", "-DVERIFY", "-D_WIN32", "-D_MSC_VER=1600", "-DVCC_PORTABLE_PP" };
+      if (commandLineOptions.PointerSize == 64) args.Add("-D_WIN64");
+      foreach (string ppOption in commandLineOptions.PreprocessorOptions) {
+        // accept MSVC-style /D, /U and /I options
+        if (ppOption.Length > 1 && ppOption[0] == '/' && "DUI".IndexOf(ppOption[1]) >= 0) args.Add("-" + ppOption.Substring(1));
+        else args.Add(ppOption);
+      }
+      string/*?*/ vccHeaders = PathHelper.GetVccHeaderDir(false);
+      if (vccHeaders != null) {
+        args.Add("-I"); args.Add(vccHeaders);
+        args.Add("-I"); args.Add(Path.Combine(vccHeaders, "portable"));
+      }
+      args.Add(fileName);
+      return args;
+    }
+
+    static readonly Regex GnuLineMarker = new Regex("^#\\s*(\\d+)\\s+(\"(?:[^\"\\\\]|\\\\.)*\")(?:\\s+\\d+)*\\s*$", RegexOptions.Compiled);
+
+    private static StreamReader RunGnuPreprocessor(string fileName, VccOptions commandLineOptions, string outFileName) {
+      string cpp = Environment.GetEnvironmentVariable("VCC_CPP");
+      if (String.IsNullOrEmpty(cpp)) cpp = "cpp";
+      var info = new ProcessStartInfo(cpp) {
+        CreateNoWindow = true, RedirectStandardOutput = true, RedirectStandardError = true,
+        UseShellExecute = false, StandardOutputEncoding = Encoding.UTF8
+      };
+      info.Arguments = String.Join(" ", GenerateCppArgs(fileName, commandLineOptions, IsMcpp(cpp)).Select(a => "\"" + a.Replace("\\", "\\\\").Replace("\"", "\\\"") + "\"").ToArray());
+
+      string stdout, stderr;
+      int exitCode;
+      using (Process process = Process.Start(info)) {
+        var errTask = process.StandardError.ReadToEndAsync();
+        stdout = process.StandardOutput.ReadToEnd();
+        stderr = errTask.Result;
+        process.WaitForExit();
+        exitCode = process.ExitCode;
+      }
+      if (exitCode != 0) {
+        Logger.Instance.Error(stderr);
+        return null;
+      }
+      if (stderr.Length > 0) Logger.Instance.Log(stderr);
+
+      // VCC's scanner understands '#line N "file"' but not GNU line markers ('# N "file" flags').
+      var sb = new StringBuilder(stdout.Length);
+      foreach (var line in stdout.Split('\n')) {
+        var m = GnuLineMarker.Match(line);
+        if (m.Success) {
+          var file = m.Groups[2].Value;
+          if (file == "\"<built-in>\"" || file == "\"<command-line>\"") { sb.Append('\n'); continue; }
+          sb.Append("#line ").Append(m.Groups[1].Value).Append(' ').Append(file).Append('\n');
+        } else {
+          sb.Append(line).Append('\n');
+        }
+      }
+      var text = sb.ToString();
+      if (commandLineOptions.KeepPreprocessorFiles) {
+        File.WriteAllText(outFileName, text, Encoding.UTF8);
+      }
+      return new StreamReader(new MemoryStream(Encoding.UTF8.GetBytes(text)));
+    }
+
     private static StreamReader RunPreprocessor(string fileName, VccOptions commandLineOptions) {
+      if (UseGnuPreprocessor) {
+        string ppOut = Path.ChangeExtension(fileName, ".i");
+        if (commandLineOptions.OutputDir != null) ppOut = Path.Combine(commandLineOptions.OutputDir, Path.GetFileName(ppOut));
+        return RunGnuPreprocessor(fileName, commandLineOptions, ppOut);
+      }
       string args = GenerateClArgs(fileName, commandLineOptions);
       string outExtension = ".i";
       string outFileName = Path.ChangeExtension(fileName, outExtension);

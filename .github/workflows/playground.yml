@@ -1,0 +1,105 @@
+# Builds the VCC playground (VCC on .NET/WebAssembly + Z3 and mcpp via Emscripten) and
+# deploys it to GitHub Pages. See port/README.md.
+name: playground
+
+on:
+  push:
+    branches: [master, playground]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: playground-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  Z3_TAG: z3-4.15.4
+  MCPP_REPO: https://github.com/zeroc-ice/mcpp.git
+  MCPP_COMMIT: 0e0c5211092089792bc728005e423dc63d287023
+  EMSDK_VERSION: 3.1.73
+  DOTNET_NOLOGO: "1"
+  DOTNET_CLI_TELEMETRY_OPTOUT: "1"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: 10.0.x
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+
+      - uses: mymindstorm/setup-emsdk@v16
+        with:
+          version: ${{ env.EMSDK_VERSION }}
+          actions-cache-folder: emsdk-cache
+
+      - name: Fetch Z3 and mcpp sources
+        run: |
+          git clone --quiet --depth 1 --branch "$Z3_TAG" https://github.com/Z3Prover/z3.git build/z3
+          git init --quiet build/mcpp
+          git -C build/mcpp fetch --quiet --depth 1 "$MCPP_REPO" "$MCPP_COMMIT"
+          git -C build/mcpp checkout --quiet FETCH_HEAD
+
+      # building libz3 with Emscripten takes most of the job; it only depends on the Z3
+      # version and the build script
+      - name: Cache Z3 (WebAssembly) build
+        uses: actions/cache@v6
+        with:
+          # the library plus the generated headers the wrapper (port/wasm/vccz3.cpp) includes
+          path: |
+            build/z3-wasm/libz3.a
+            build/z3-wasm/src/**/*.h
+            build/z3-wasm/src/**/*.hpp
+          key: z3-wasm-${{ env.Z3_TAG }}-emsdk-${{ env.EMSDK_VERSION }}-${{ hashFiles('port/wasm/build-z3.sh') }}
+
+      - name: Build Z3 and mcpp for WebAssembly
+        run: |
+          port/wasm/build-z3.sh build/z3 build/z3-wasm build/wasm    # skips libz3 when cached
+          port/wasm/build-mcpp.sh build/mcpp build/wasm
+
+      - name: Build VCC and run the native smoke test
+        run: |
+          sudo apt-get install -y --no-install-recommends z3
+          dotnet build port/VccPort.sln -c Release
+          cd vcc/Demo
+          dotnet ../../port/Host/bin/Release/vcc.dll Parity.c
+
+      - name: Assemble the site
+        run: port/web/assemble.sh _site build/wasm build/wasm
+
+      - name: Smoke-test the site under Node
+        run: |
+          node port/web/run-node.mjs _site vcc/Demo/Parity.c
+          # a wrong postcondition must be reported (exit code 3)
+          printf '#include <vcc.h>\nint inc(int x) _(requires x < 100) _(ensures \\result == x + 2) { return x + 1; }\n' > /tmp/bad.c
+          set +e; node port/web/run-node.mjs _site /tmp/bad.c | tee /tmp/bad.out; rc=${PIPESTATUS[0]}; set -e
+          test "$rc" = 3
+          grep -q "VC9501" /tmp/bad.out
+
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: _site
+
+  deploy:
+    if: github.event_name != 'pull_request' && (github.ref == 'refs/heads/master' || github.event_name == 'workflow_dispatch')
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v5

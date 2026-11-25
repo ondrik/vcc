@@ -477,6 +477,7 @@ namespace Microsoft.Research.Vcc
       {
         Logger.Instance.NewLine();
         Logger.Instance.Error(e.Message);
+        if (Environment.GetEnvironmentVariable("VCC_DEBUG") != null) Logger.Instance.Error(e.ToString());
       }
 
       return -2;
@@ -675,11 +676,21 @@ namespace Microsoft.Research.Vcc
     {
       Debug.Assert(pointerSizeInBits == 32 || pointerSizeInBits == 64);
       this.peReader = new PeReader(this);
-      string loc = typeof(object).Assembly.Location;
-      System.Reflection.AssemblyName mscorlibName = new System.Reflection.AssemblyName(typeof(object).Assembly.FullName);
+      // Prefer a fixed reference mscorlib (shipped next to vcc) over the running runtime's core
+      // library: the C type system is modelled on the .NET Framework one, and on non-Windows
+      // runtimes typeof(object) is System.Private.CoreLib.
+      string loc = Path.Combine(PathHelper.VccHome, "ref", "mscorlib.dll");
+      System.Reflection.AssemblyName mscorlibName;
+      if (File.Exists(loc)) {
+        mscorlibName = System.Reflection.AssemblyName.GetAssemblyName(loc);
+      } else {
+        loc = typeof(object).Assembly.Location;
+        mscorlibName = new System.Reflection.AssemblyName(typeof(object).Assembly.FullName);
+      }
       var tempMscorlibIdentity = new AssemblyIdentity(this.NameTable.GetNameFor(mscorlibName.Name), "", mscorlibName.Version, mscorlibName.GetPublicKeyToken(), loc);
       this.RegisterAsLatest(this.peReader.OpenAssembly(BinaryDocument.GetBinaryDocumentForFile(tempMscorlibIdentity.Location, this), out this.mscorlibIdentity));
       loc = typeof(Microsoft.Research.Vcc.Runtime).Assembly.Location;
+      if (String.IsNullOrEmpty(loc)) loc = Path.Combine(PathHelper.VccHome, "Microsoft.Research.Vcc.Runtime.dll");
       System.Reflection.AssemblyName runtimeName = new System.Reflection.AssemblyName(typeof(Microsoft.Research.Vcc.Runtime).Assembly.FullName);
       var tempVccRuntimeAssemblyIdentity = new AssemblyIdentity(this.NameTable.GetNameFor(runtimeName.Name), "", runtimeName.Version, runtimeName.GetPublicKeyToken(), loc);
       this.RegisterAsLatest(this.peReader.OpenAssembly(BinaryDocument.GetBinaryDocumentForFile(tempVccRuntimeAssemblyIdentity.Location, this), out this.vccRuntimeAssemblyIdentity));
@@ -719,9 +730,57 @@ namespace Microsoft.Research.Vcc
 
     readonly Microsoft.Cci.PeReader peReader;
 
+    // Read binaries into unmanaged memory instead of memory-mapping them through kernel32,
+    // which is only available on Windows.
+    public override IBinaryDocumentMemoryBlock OpenBinaryDocument(IBinaryDocument sourceDocument)
+    {
+      try {
+        return InMemoryBinaryDocument.Load(sourceDocument);
+      } catch (IOException) {
+        return null;
+      }
+    }
+
+    public override IBinaryDocumentMemoryBlock OpenBinaryDocument(IBinaryDocument parentSourceDocument, string childDocumentName)
+    {
+      try {
+        string dir = Path.GetDirectoryName(parentSourceDocument.Location);
+        string path = Path.Combine(dir, childDocumentName);
+        var doc = BinaryDocument.GetBinaryDocumentForFile(path, this);
+        return InMemoryBinaryDocument.Load(doc);
+      } catch (IOException) {
+        return null;
+      }
+    }
+
     public override void ReportErrors(Microsoft.Cci.ErrorEventArgs errorEventArguments)
     {
       this.SynchronousReportErrors(errorEventArguments);
     }
+  }
+
+  internal unsafe sealed class InMemoryBinaryDocument : IBinaryDocumentMemoryBlock
+  {
+    readonly IBinaryDocument document;
+    readonly byte* pointer;
+    readonly uint length;
+
+    InMemoryBinaryDocument(IBinaryDocument document, byte[] bytes)
+    {
+      this.document = document;
+      this.length = (uint)bytes.Length;
+      // Intentionally never freed: CCI keeps pointers into the image for the host's lifetime.
+      this.pointer = (byte*)System.Runtime.InteropServices.Marshal.AllocHGlobal(Math.Max(bytes.Length, 1));
+      System.Runtime.InteropServices.Marshal.Copy(bytes, 0, (IntPtr)this.pointer, bytes.Length);
+    }
+
+    internal static InMemoryBinaryDocument Load(IBinaryDocument document)
+    {
+      return new InMemoryBinaryDocument(document, File.ReadAllBytes(document.Location));
+    }
+
+    public IBinaryDocument BinaryDocument { get { return this.document; } }
+    public byte* Pointer { get { return this.pointer; } }
+    public uint Length { get { return this.length; } }
   }
 }

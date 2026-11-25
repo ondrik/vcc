@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AssemblyName>Microsoft.Research.Vcc.Ast</AssemblyName>
+    <OutputType>Library</OutputType>
+
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="$(Src)Ast/Token.fs" />
+    <Compile Include="$(Src)Ast/Util.fs" />
+    <Compile Include="$(Src)Ast/CAST.fs" />
+    <Compile Include="$(Src)Common/Include/version.fs" />
+    <Compile Include="$(Src)Ast/Helper.fs" />
+  </ItemGroup>
+</Project>

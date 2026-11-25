@@ -1,0 +1,53 @@
+<Project Sdk="Microsoft.NET.Sdk.WebAssembly">
+  <!-- VCC compiled for the browser (browser-wasm). Contains the Host sources plus a small
+       JS-facing entry point; runs one verification per .NET runtime instance. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <AssemblyName>vcc</AssemblyName>
+    <RootNamespace>Microsoft.Research.Vcc</RootNamespace>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <DefineConstants>$(DefineConstants);VCC_BROWSER</DefineConstants>
+    <StartupObject>Microsoft.Research.Vcc.Browser.Program</StartupObject>
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <WasmEnableWebcil>true</WasmEnableWebcil>
+    <!-- PatchLibs is only a build-time tool -->
+    <ValidateExecutableReferencesMatchSelfContained>false</ValidateExecutableReferencesMatchSelfContained>
+    <!-- keep real exception messages; they end up in the playground output -->
+    <UseSystemResourceKeys>false</UseSystemResourceKeys>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="$(Src)Common/Include/version.cs" />
+    <Compile Include="$(Src)Host/CCompilerHelper.cs;$(Src)Host/ConsoleLogger.cs;$(Src)Host/ErrorHandler.cs;$(Src)Host/PathHelper.cs;$(Src)Host/PluginManager.cs;$(Src)Host/Host.cs;$(Src)Host/TestRunner.cs;$(Src)Host/TransEnv.cs;$(Src)Host/VccOptionWrapper.cs;$(Src)Host/VccPlugin.cs;$(Src)Host/XmlLogger.cs" />
+    <Compile Include="Program.cs" />
+    <EmbeddedResource Include="$(Src)Host/ErrorMessages.resx" LogicalName="Microsoft.Research.Vcc.Host.ErrorMessages.resources" />
+    <PackageReference Include="System.ComponentModel.Composition" Version="10.0.0" />
+    <ProjectReference Include="../tools/PatchLibs/PatchLibs.csproj" ReferenceOutputAssembly="false" />
+    <ProjectReference Include="../ProverBridge/ProverBridge.csproj" />
+    <ProjectReference Include="../Ast/Ast.fsproj" />
+    <ProjectReference Include="../Runtime/Runtime.csproj" SetTargetFramework="TargetFramework=net40" SkipGetTargetFrameworkProperties="true" />
+    <ProjectReference Include="../Core/Core.csproj" />
+    <ProjectReference Include="../CodeModel2VccHelper/CodeModel2VccHelper.csproj" />
+    <ProjectReference Include="../CodeModel2Vcc/CodeModel2Vcc.fsproj" />
+    <ProjectReference Include="../Transformers/Transformers.fsproj" />
+    <ProjectReference Include="../Translator/Translator.fsproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="Microsoft.Cci.AstsProjectedAsCodeModel;Microsoft.Cci.CodeModel;Microsoft.Cci.CodeModelToIL;Microsoft.Cci.ILGenerator;Microsoft.Cci.MetadataHelper;Microsoft.Cci.MetadataModel;Microsoft.Cci.MutableCodeModel;Microsoft.Cci.MutableMetadataModel;Microsoft.Cci.PeReader;Microsoft.Cci.SourceModel;Microsoft.Contracts" HintPath="$(Libs)CCI/%(Identity).dll" />
+    <Reference Include="AbsInt;AIFramework;Basetypes;Core;Graph;Model;ParserHelper;Provers.SMTLib;VCExpr;VCGeneration;Houdini;CodeContractsExtender" HintPath="$(BoogieInprocLibs)%(Identity).dll" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies.net40" Version="1.0.3" GeneratePathProperty="true" ExcludeAssets="all" />
+  </ItemGroup>
+  <!-- Support files VCC reads from disk; unpacked to VCC_HOME (/vcc) by Program.Main. -->
+  <Target Name="EmbedVfsFiles" BeforeTargets="PrepareForBuild;AssignTargetPaths">
+    <ItemGroup>
+      <VfsHeader Include="$(Src)Headers/*.h;$(Src)Headers/*.bpl" />
+      <VfsPortableHeader Include="$(Src)Headers/portable/*.h" />
+      <EmbeddedResource Include="@(VfsHeader)" LogicalName="vfs/headers/%(Filename)%(Extension)" />
+      <EmbeddedResource Include="@(VfsPortableHeader)" LogicalName="vfs/headers/portable/%(Filename)%(Extension)" />
+      <EmbeddedResource Include="$(PkgMicrosoft_NETFramework_ReferenceAssemblies_net40)/build/.NETFramework/v4.0/mscorlib.dll" LogicalName="vfs/ref/mscorlib.dll" />
+      <EmbeddedResource Include="$(MSBuildThisFileDirectory)../Runtime/bin/$(Configuration)/Microsoft.Research.Vcc.Runtime.dll" LogicalName="vfs/Microsoft.Research.Vcc.Runtime.dll" />
+      <EmbeddedResource Include="$(Src)Boogie/UnivBackPred2.smt2" LogicalName="vfs/UnivBackPred2.smt2" />
+    </ItemGroup>
+  </Target>
+</Project>

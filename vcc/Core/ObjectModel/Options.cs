@@ -138,6 +138,25 @@ namespace Microsoft.Research.Vcc
       this.options.CheckedArithmetic = true;
     }
 
+    /// <summary>
+    /// The CCI option parser assumes Windows paths: it rewrites '/' to '\\' and treats every argument
+    /// starting with '/' as an option. Outside Windows, take arguments that name existing files out
+    /// before handing the rest to it.
+    /// </summary>
+    private static List<string> ExtractUnixFileArguments(ref IEnumerable<string> arguments) {
+      var files = new List<string>();
+      if (System.IO.Path.DirectorySeparatorChar != '/') return files;
+      var rest = new List<string>();
+      foreach (var arg in arguments) {
+        if (!String.IsNullOrEmpty(arg) && arg[0] != '@' && System.IO.File.Exists(arg))
+          files.Add(System.IO.Path.GetFullPath(arg));
+        else
+          rest.Add(arg);
+      }
+      arguments = rest;
+      return files;
+    }
+
     private static void CheckOptions(MetadataHostEnvironment hostEnvironment, VccOptions options)
     {
       if (options.RunTestSuite &&
@@ -156,7 +175,9 @@ namespace Microsoft.Research.Vcc
 
     public static VccOptions ParseCommandLineArguments(MetadataHostEnvironment hostEnvironment, IEnumerable<string> arguments, bool oneOrMoreSourceFilesExpected) {
       OptionParser parser = new OptionParser(hostEnvironment);
-      parser.ParseCommandLineArguments(arguments, oneOrMoreSourceFilesExpected);
+      List<string> files = ExtractUnixFileArguments(ref arguments);
+      parser.ParseCommandLineArguments(arguments, oneOrMoreSourceFilesExpected && files.Count == 0);
+      parser.options.FileNames.AddRange(files);
       CheckOptions(hostEnvironment, parser.options);
       return parser.options;
     }

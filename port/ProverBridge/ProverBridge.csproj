@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- In-process replacement for the z3.exe process Boogie talks to. The patched
+       Provers.SMTLib.dll (see tools/PatchLibs, in-process flavour) calls into Bridge. -->
+  <PropertyGroup>
+    <OutputType>Library</OutputType>
+    <AssemblyName>Vcc.ProverBridge</AssemblyName>
+    <RootNamespace>Microsoft.Research.Vcc.ProverBridge</RootNamespace>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="Bridge.cs" />
+    <Compile Include="NativeZ3.cs" />
+    <Compile Include="../Z3Shim/Z3Compat.cs" Link="Z3Compat.cs" />
+  </ItemGroup>
+</Project>
