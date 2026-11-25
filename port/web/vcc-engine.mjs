@@ -45,7 +45,9 @@ export async function runVcc(o) {
   const createMcpp = (await import(o.base + 'wasm/mcpp.js')).default;
   const mcpp = await createMcpp({ print: l => ppOut.push(l), printErr: l => ppErr.push(l) });
   for (const [n, data] of headers) writeFile(mcpp.FS, '/vcc/headers/' + n, data);
-  writeFile(mcpp.FS, '/work/' + fileName, o.source);
+  // mcpp warns about a missing final newline; supply it so the user doesn't see that
+  const source = o.source.endsWith('\n') ? o.source : o.source + '\n';
+  writeFile(mcpp.FS, '/work/' + fileName, source);
   const ppArgs = ['-I-', '-DVERIFY', '-D_WIN32', '-D_MSC_VER=1600', '-DVCC_PORTABLE_PP'];
   if (pointerSize(args) === 64) ppArgs.push('-D_WIN64');
   for (const a of args) {                       // /p:<option> passes options to the preprocessor
